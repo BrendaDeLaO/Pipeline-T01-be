@@ -1,0 +1,23 @@
+# kubectl apply -f brenda-delao-02-deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: brenda-delao-02-deployment
+  namespace: brenda-delao-02-namespace
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: brenda-delao-02-deployment        # Debe coincidir con las etiquetas del Service
+  template:
+    metadata:
+      labels:
+        app: brenda-delao-02-deployment      # Debe coincidir con las etiquetas del Service
+    spec:
+      containers:
+      - name: brenda-delao-02-container
+        image: brenda0407/brenda-webflux-nosql:1.0   # Reemplaza con tu imagen Docker Hub
+        imagePullPolicy: IfNotPresent        # Evitar traer siempre la última versión si hay una actual
+        #envFrom:
+        #- secretRef:
+        #    name: juan-condori-00-secret  # Esto cargará todos los valores como variables de entorno

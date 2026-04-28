@@ -1,0 +1,6 @@
+# kubectl create namespace brenda-delao-02-namespace (COMANDO)
+# kubectl apply -f brenda-delao-02-namespace.yml (yml)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: brenda-delao-02-namespace

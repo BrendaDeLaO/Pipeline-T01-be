@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saori-apaza-01-mongodb
+  namespace: saori-apaza-01-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saori-mongodb
+  template:
+    metadata:
+      labels:
+        app: saori-mongodb
+    spec:
+      containers:
+      - name: mongodb
+        image: mongo:6.0
+        ports:
+        - containerPort: 27017
+        env:
+        - name: MONGO_INITDB_DATABASE
+          value: Wines
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: saori-apaza-01-mongo-service
+  namespace: saori-apaza-01-namespace
+spec:
+  selector:
+    app: saori-mongodb
+  ports:
+  - port: 27017
+    targetPort: 27017
+  type: ClusterIP

@@ -1,0 +1,6 @@
+# kubectl create namespace saori-apaza-01-namespace (COMANDO)
+# kubectl apply -f saori-apaza-01-namespace.yml (yml)
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: saori-apaza-01-namespace

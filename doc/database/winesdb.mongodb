@@ -1,0 +1,510 @@
+// ============================================================
+// SCRIPT DE IMPLEMENTACIÓN
+// ============================================================
+
+use("winesdb");
+
+// ==================== CREAR COLECCIONES ====================
+
+db.createCollection("user", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["full_name", "email", "password", "role", "is_active"],
+      properties: {
+        full_name:  { bsonType: "string" },
+        email:      { bsonType: "string" },
+        password:   { bsonType: "string" },
+        role:       { bsonType: "string", enum: ["admin", "vendedor", "caja"] },
+        created_at: { bsonType: "date" },
+        deleted_at: { bsonType: ["date", "null"] },
+        is_active:  { bsonType: "bool" }
+      }
+    }
+  }
+});
+db.user.createIndex({ email: 1 }, { unique: true });
+
+db.createCollection("customer", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name", "last_name", "email", "state"],
+      properties: {
+        name:       { bsonType: "string" },
+        last_name:  { bsonType: "string" },
+        phone:      { bsonType: "string" },
+        email:      { bsonType: "string" },
+        address:    { bsonType: "string" },
+        state:      { bsonType: "string", enum: ["Activo", "Inactivo"] },
+        user_id:    { bsonType: ["objectId", "null"] },
+        created_at: { bsonType: "date" }
+      }
+    }
+  }
+});
+db.customer.createIndex({ email: 1 }, { unique: true });
+
+db.createCollection("product", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["product_name", "product_size", "price", "product_category", "stock"], 
+      properties: {
+        code:                { bsonType: "string" },
+        product_name:        { bsonType: "string" },
+        product_size:        { bsonType: "number" }, 
+        price:               { bsonType: "number" },
+        product_category:    { bsonType: "string", enum: ["Vino", "Pisco", "Crema", "Brandy"] },
+        product_description: { bsonType: "string" },
+        awards:              { bsonType: "string" },
+        vintage_year:        { bsonType: "int" },
+        register_date:       { bsonType: "date" },
+        series:              { bsonType: "string" },
+        stock:               { bsonType: "int" },
+        state:               { bsonType: "bool" },
+        created_at:          { bsonType: "date" },
+        updated_at:          { bsonType: ["date", "null"] },
+        deleted_at:          { bsonType: ["date", "null"] },
+        restored_at:         { bsonType: ["date", "null"] }
+      }
+    }
+  }
+});
+db.product.createIndex({ code: 1 }, { unique: true });
+
+db.createCollection("promotion", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["name", "discountPercent", "startDate", "endDate"],
+      properties: {
+        name:            { bsonType: "string" },
+        description:     { bsonType: "string" },
+        discountPercent: { bsonType: "number", minimum: 0, maximum: 100 },
+        startDate:       { bsonType: "date" },
+        endDate:         { bsonType: "date" }
+      }
+    }
+  }
+});
+
+db.createCollection("tasting_event", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["event_name", "event_date", "max_capacity", "price_per_person", "state"],
+      properties: {
+        event_name:        { bsonType: "string" },
+        event_description: { bsonType: "string" },
+        event_date:        { bsonType: "date" },
+        max_capacity:      { bsonType: "int", minimum: 1 },
+        price_per_person:  { bsonType: "number", minimum: 0 },
+        state:             { bsonType: "string", enum: ["Activo", "Cancelado", "Finalizado"] },
+        created_at:        { bsonType: "date" },
+        updated_at:        { bsonType: ["date", "null"] },
+        deleted_at:        { bsonType: ["date", "null"] },
+        restored_at:       { bsonType: ["date", "null"] }
+      }
+    }
+  }
+});
+
+db.createCollection("location", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["address", "latitude", "longitude", "status", "tastingevent_id"],
+      properties: {
+        address:            { bsonType: "string" },
+        ubigeo:             { bsonType: "string" },
+        latitude:           { bsonType: "double" },
+        longitude:          { bsonType: "double" },
+        additional_details: { bsonType: "string" },
+        status:             { bsonType: "bool" },
+        tastingevent_id:    { bsonType: "objectId" }
+      }
+    }
+  }
+});
+
+db.createCollection("product_promotion", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["promotion_id", "product_id"],
+      properties: {
+        promotion_id: { bsonType: "objectId" },
+        product_id:   { bsonType: "objectId" }
+      }
+    }
+  }
+});
+
+db.createCollection("sale", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["customer_id", "sale_date", "delivery_type", "payment_method"],
+      properties: {
+        customer_id:    { bsonType: "objectId" },
+        sale_date:      { bsonType: "date" },
+        delivery_type:  { bsonType: "string", enum: ["Delivery", "Recojo en tienda"] },
+        payment_method: { bsonType: "string", enum: ["Efectivo", "Tarjeta", "Transferencia", "Yape", "Plin"] }
+      }
+    }
+  }
+});
+
+db.createCollection("sale_detail", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["product_id", "sale_id", "quantity", "price_sale"],
+      properties: {
+        product_id: { bsonType: "objectId" },
+        sale_id:    { bsonType: "objectId" },
+        quantity:   { bsonType: "int", minimum: 1 },
+        price_sale: { bsonType: "number", minimum: 0 }
+      }
+    }
+  }
+});
+
+db.createCollection("sale_summaries", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["sale_id", "total_calculated_sale"],
+      properties: {
+        sale_id:               { bsonType: "objectId" },
+        total_calculated_sale: { bsonType: "number", minimum: 0 }
+      }
+    }
+  }
+});
+
+db.createCollection("reservation", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["status", "customer_id", "reservationDate", "numberOfPeople", "tastingevent_id"],
+      properties: {
+        status:          { bsonType: "string", enum: ["P", "C", "X"] },
+        customer_id:     { bsonType: "objectId" },
+        reservationDate: { bsonType: "date" },
+        reservationTime: { bsonType: "date" },
+        numberOfPeople:  { bsonType: "int", minimum: 1 },
+        tastingevent_id: { bsonType: "objectId" }
+      }
+    }
+  }
+});
+
+db.createCollection("reservation_guest", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["reservation_id", "first_name", "last_name", "status"],
+      properties: {
+        reservation_id: { bsonType: "objectId" },
+        customer_id:    { bsonType: ["objectId", "null"] },
+        first_name:     { bsonType: "string" },
+        last_name:      { bsonType: "string" },
+        email:          { bsonType: "string" },
+        age:            { bsonType: "int", minimum: 18 },
+        preferences:    { bsonType: "string" },
+        status:         { bsonType: "bool" }
+      }
+    }
+  }
+});
+
+// ==================== INSERTAR DATOS ====================
+
+var userId1      = new ObjectId();
+var userId2      = new ObjectId();
+var customerId1  = new ObjectId();
+var customerId2  = new ObjectId();
+var productId1   = new ObjectId();
+var productId2   = new ObjectId();
+var productId3   = new ObjectId();
+var promotionId1 = new ObjectId();
+var eventId1     = new ObjectId();
+var eventId2     = new ObjectId();
+var saleId1      = new ObjectId();
+var reservationId1 = new ObjectId();
+
+// --- USERS ---
+db.user.insertMany([
+  {
+    _id: userId1,
+    full_name: "María Elena Vargas",
+    email: "maria.vargas@vinoteca.com",
+    password: "$2b$10$hashSeguroDeContrasena1",
+    role: "admin",
+    created_at: new Date("2024-01-10T08:00:00Z"),
+    deleted_at: null,
+    is_active: true
+  },
+  {
+    _id: userId2,
+    full_name: "Carlos Mendoza",
+    email: "carlos.mendoza@vinoteca.com",
+    password: "$2b$10$hashSeguroDeContrasena2",
+    role: "vendedor",
+    created_at: new Date("2024-02-05T10:00:00Z"),
+    deleted_at: null,
+    is_active: true
+  }
+]);
+
+// --- CUSTOMERS ---
+db.customer.insertMany([
+  {
+    _id: customerId1,
+    name: "Juan",
+    last_name: "Pérez López",
+    phone: "987654321",
+    email: "juan.perez@email.com",
+    address: "Av. Larco 123, Miraflores, Lima",
+    state: "Activo",
+    user_id: null,
+    created_at: new Date("2024-03-16T12:00:00Z")
+  },
+  {
+    _id: customerId2,
+    name: "Ana",
+    last_name: "Torres Quispe",
+    phone: "998877665",
+    email: "ana.torres@email.com",
+    address: "Jr. de la Unión 456, Cercado de Lima",
+    state: "Activo",
+    user_id: null,
+    created_at: new Date("2024-04-01T09:30:00Z")
+  }
+]);
+
+// --- PRODUCTS ---
+db.product.insertMany([
+  {
+    code: "P001",
+    product_name: "Cabernet Sauvignon Reserva",
+    product_size: 750,
+    price: 95.50,
+    product_category: "Vino",
+    product_description: "Vino tinto con notas de frutos rojos y vainilla.",
+    awards: "Medalla de Oro 2023",
+    vintage_year: NumberInt(2020),
+    register_date: new Date("2024-01-15"),
+    series: "Reserva Premium",
+    stock: NumberInt(120),
+    state: true,
+    created_at: new Date("2024-01-15T08:00:00Z"),
+    updated_at: null,
+    deleted_at: null,
+    restored_at: null
+  },
+  {
+    code: "P002",
+    product_name: "Malbec Gran Reserva",
+    product_size: 750,
+    price: 120.00,
+    product_category: "Vino",
+    product_description: "Vino tinto intenso con notas de ciruela y chocolate.",
+    awards: "Plata - Concurso Internacional 2022",
+    vintage_year: NumberInt(2019),
+    register_date: new Date("2024-01-15"),
+    series: "Gran Reserva",
+    stock: NumberInt(80),
+    state: true,
+    created_at: new Date("2024-01-15T08:00:00Z"),
+    updated_at: null,
+    deleted_at: null,
+    restored_at: null
+  },
+  {
+    code: "P003",
+    product_name: "Pisco Quebranta Puro",
+    product_size: 500,
+    price: 65.00,
+    product_category: "Pisco",
+    product_description: "Pisco puro de uva Quebranta, aromas a frutas frescas.",
+    awards: "",
+    vintage_year: NumberInt(2023),
+    register_date: new Date("2024-02-01"),
+    series: "Clásica",
+    stock: NumberInt(200),
+    state: true,
+    created_at: new Date("2024-02-01T08:00:00Z"),
+    updated_at: null,
+    deleted_at: null,
+    restored_at: null
+  }
+]);
+
+// --- PROMOTIONS ---
+db.promotion.insertMany([
+  {
+    _id: promotionId1,
+    name: "Verano 2024",
+    description: "Descuento especial en vinos tintos y piscos por temporada de verano.",
+    discountPercent: 15,
+    startDate: new Date("2024-01-01T00:00:00Z"),
+    endDate: new Date("2024-03-31T23:59:59Z")
+  }
+]);
+
+// --- TASTING EVENTS ---
+db.tasting_event.insertMany([
+  {
+    event_name: "Cata de Vinos Premium",
+    event_description: "Degustacion de los mejores vinos de la temporada con guia especializado.",
+    event_date: new Date("2024-05-15"),
+    max_capacity: NumberInt(30), 
+    price_per_person: 150.00,
+    state: "Activo",
+    created_at: new Date("2024-04-01T10:00:00Z"),
+    updated_at: null,
+    deleted_at: null,
+    restored_at: null
+  },
+  {
+    event_name: "Cata Comparativa Piscos",
+    event_description: "Comparacion de piscos puros y acholados de distintas regiones del Peru.",
+    event_date: new Date("2024-06-20"),
+    max_capacity: NumberInt(20),
+    price_per_person: 100.00,
+    state: "Activo",
+    created_at: new Date("2024-04-10T10:00:00Z"),
+    updated_at: null,
+    deleted_at: null,
+    restored_at: null
+  }
+]);
+
+// --- LOCATIONS ---
+db.location.insertMany([
+  {
+    address: "Av. La Marina 2050, San Miguel, Lima",
+    ubigeo: "150136",
+    latitude: -12.0789,
+    longitude: -77.0823,
+    additional_details: "Salon principal del segundo piso.",
+    status: true,
+    tastingevent_id: eventId1
+  },
+  {
+    address: "Calle Schell 310, Miraflores, Lima",
+    ubigeo: "150122",
+    latitude: -12.1219,
+    longitude: -77.0310,
+    additional_details: "Local boutique, primer piso.",
+    status: true,
+    tastingevent_id: eventId2
+  }
+]);
+
+// --- PRODUCT_PROMOTIONS ---
+db.product_promotion.insertMany([
+  { promotion_id: promotionId1, product_id: productId1 },
+  { promotion_id: promotionId1, product_id: productId2 }
+]);
+
+// --- SALES ---
+db.sale.insertMany([
+  {
+    _id: saleId1,
+    customer_id: customerId1,
+    sale_date: new Date("2024-03-16T00:00:00Z"),
+    delivery_type: "Delivery",
+    payment_method: "Tarjeta"
+  }
+]);
+
+// --- SALE_DETAILS ---
+db.sale_detail.insertMany([
+  { product_id: productId1, sale_id: saleId1, quantity: 2, price_sale: 95.50 },
+  { product_id: productId2, sale_id: saleId1, quantity: 1, price_sale: 120.00 }
+]);
+
+// --- SALE_SUMMARIES ---
+db.sale_summaries.insertOne({
+  sale_id: saleId1,
+  total_calculated_sale: 311.00  // (95.50 * 2) + (120.00 * 1)
+});
+
+// --- RESERVATIONS ---
+db.reservation.insertMany([
+  {
+    _id: reservationId1,
+    status: "C",
+    customer_id: customerId1,
+    reservationDate: new Date("2024-05-15T00:00:00Z"),
+    reservationTime: new Date("2024-05-15T19:00:00Z"),
+    numberOfPeople: 4,
+    tastingevent_id: eventId1
+  }
+]);
+
+// --- RESERVATION_GUESTS ---
+db.reservation_guest.insertMany([
+  {
+    reservation_id: reservationId1,
+    customer_id: customerId1,
+    first_name: "Juan",
+    last_name: "Pérez",
+    email: "juan.perez@email.com",
+    age: 35,
+    preferences: "Prefiere vinos secos",
+    status: true
+  },
+  {
+    reservation_id: reservationId1,
+    customer_id: null,
+    first_name: "Luis",
+    last_name: "García",
+    email: "luis.garcia@email.com",
+    age: 28,
+    preferences: "Sin preferencia",
+    status: true
+  }
+]);
+
+// ==================== VERIFICACIÓN ====================
+// ---user---
+use("winesdb");
+db.user.find();
+// ---customer---
+use("winesdb");
+db.customer.find();
+// ---product---
+use("winesdb");
+db.product.find();
+// ---promotion---
+use("winesdb");
+db.promotion.find();
+// ---tastingevent---
+use("winesdb");
+db.tastingevent.find();
+// ---location---
+use("winesdb");
+db.location.find();
+// ---product_promotion---
+use("winesdb");
+db.product_promotion.find();
+// ---sale---
+use("winesdb");
+db.sale.find();
+// ---sale_detail---
+use("winesdb");
+db.sale_detail.find();
+// ---sale_summaries---
+use("winesdb");
+db.sale_summaries.find();
+// ---reservation---
+use("winesdb");
+db.reservation.find();
+// ---reservation_guest---
+use("winesdb");
+db.reservation_guest.find();

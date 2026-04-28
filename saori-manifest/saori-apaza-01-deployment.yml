@@ -1,0 +1,23 @@
+# kubectl apply -f saori-apaza-01-deployment.yml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saori-apaza-01-deployment
+  namespace: saori-apaza-01-namespace
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: saori-apaza-01-deployment        # Debe coincidir con las etiquetas del Service
+  template:
+    metadata:
+      labels:
+        app: saori-apaza-01-deployment      # Debe coincidir con las etiquetas del Service
+    spec:
+      containers:
+      - name: saori-apaza-01-container
+        image: saoriapaza/saori-webflux-nosql:2.0   # Reemplaza con tu imagen Docker Hub
+        imagePullPolicy: IfNotPresent        # Evitar traer siempre la última versión si hay una actual
+        envFrom:
+        - secretRef:
+            name: saori-apaza-01-secret  # Esto cargará todos los valores como variables de entorno

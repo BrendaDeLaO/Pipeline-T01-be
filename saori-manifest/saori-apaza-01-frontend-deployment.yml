@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: saori-apaza-01-frontend
+  namespace: saori-apaza-01-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: saori-apaza-01-frontend
+  template:
+    metadata:
+      labels:
+        app: saori-apaza-01-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: saoriapaza/wines-frontend:1.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
