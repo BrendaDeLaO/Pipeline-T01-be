@@ -35,7 +35,8 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-          dockerfile: Dockerfile
+          #dockerfile: Dockerfile   # Dockerfile en la raíz del proyecto
+          file: ./dockerfile-brenda/Dockerfile        # Dockerfile en la carpeta dockerfile-juan
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME_BRENDA }}/webflux-nosql:latest
