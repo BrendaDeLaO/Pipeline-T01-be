@@ -7,7 +7,7 @@ on:
       - webflux-nosql # puedes añadir más ramas
   pull_request:
     branches:
-      - develop
+      - develop  #rama en uso actual
       - webflux-nosql # puedes añadir más ramas
   schedule:
     # Ejecutar todos los días a las 8:00 AM hora Perú (UTC-5) → 1:00 PM UTC
